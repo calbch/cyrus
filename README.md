@@ -2,6 +2,7 @@
 
 Project for the Remote e/acc OpenAI hackathon
 
+![application_flow](/img/flow.png)
 
 ## How to use
 - `source .venv/bin/activate`
