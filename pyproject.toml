@@ -19,7 +19,11 @@ matplotlib = "^3.8.1"
 tiktoken = "^0.5.1"
 open-clip-torch = "^2.23.0"
 torch = "^2.1.0"
+langchain-experimental = "^0.0.40"
 
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.26.0"
 
 [build-system]
 requires = ["poetry-core"]
