@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "cyrus"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+numpy = "^1.26.1"
+chromadb = "^0.4.16"
+langchain = "^0.0.334"
+openai = "^1.2.3"
+unstructured = {version = "0.10.19", extras = ["pdf"]}
+pillow = "^10.1.0"
+pydantic = "^2.4.2"
+lxml = "^4.9.3"
+matplotlib = "^3.8.1"
+tiktoken = "^0.5.1"
+open-clip-torch = "^2.23.0"
+torch = "^2.1.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
