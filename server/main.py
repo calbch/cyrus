@@ -1,36 +1,22 @@
-from flask import Flask, Response, jsonify, request
-from flask_cors import CORS, cross_origin
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 from unstructured.partition.pdf import partition_pdf
 import tempfile
 import os
 
-from langchain.vectorstores import Chroma
-from langchain_experimental.open_clip import OpenCLIPEmbeddings
 from langchain.chat_models import ChatOpenAI
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
-from langchain.schema.messages import HumanMessage, SystemMessage
-from server.image_tools import is_base64, split_image_text_types
 
-from server.util import categorize_pdf_elements, prompt_func
+from server.classes import PdfSummary
 
-vectorstore = Chroma(
-    collection_name="cyrus_rag_clip", embedding_function=OpenCLIPEmbeddings()
+
+from langchain.chains.openai_functions import (
+    create_structured_output_runnable,
 )
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
 
-retriever = vectorstore.as_retriever()
+from server.util import concatenate_pdf_elements
 
-model = ChatOpenAI(temperature=0, model="gpt-4-vision-preview", max_tokens=1024)
-
-chain = (
-    {
-        "context": retriever | RunnableLambda(split_image_text_types),
-        "question": RunnablePassthrough(),
-    }
-    | RunnableLambda(prompt_func)
-    | model
-    | StrOutputParser()
-)
 app = Flask(__name__)
 CORS(app)
 
@@ -52,32 +38,43 @@ def process_pdf():
 
         raw_pdf_elements = partition_pdf(
             filename=file_path,
-            extract_images_in_pdf=True,
-            infer_table_structure=True,
-            chunking_strategy="by_title",
-            max_characters=4000,
-            new_after_n_chars=3800,
-            combine_text_under_n_chars=2000,
-            image_output_dir_path=temp_dir,
+            strategy="fast",
         )
 
-        # investigate this
-        tables, texts = categorize_pdf_elements(raw_pdf_elements)
-
-        image_uris = sorted(
+        elements = concatenate_pdf_elements(raw_pdf_elements)
+        llm = ChatOpenAI(model="gpt-4-1106-preview", temperature=0)
+        prompt = ChatPromptTemplate.from_messages(
             [
-                os.path.join(temp_dir, image_name)
-                for image_name in os.listdir(temp_dir)
-                if image_name.endswith(".jpg")
+                (
+                    "system",
+                    "You are a world class algorithm for extracting information in structured formats. You know a lot about different classes at university and you are able to summarize and categorize complex texts.",
+                ),
+                (
+                    "human",
+                    "Use the given format to extract information from the following input: {input}",
+                ),
+                (
+                    "human",
+                    "Choose a classification from the following list: {classes}",
+                ),
+                (
+                    "human",
+                    "Make sure to answer in the correct format and dont repeat information in the summary that is present in title or classification.",
+                ),
+                (
+                    "human",
+                    "I am studying for finals and your summary is crucial for my success.",
+                ),
             ]
         )
 
-        vectorstore.add_images(uris=image_uris)
+        runnable = create_structured_output_runnable(PdfSummary, llm, prompt)
+        result = runnable.invoke({"input": elements, "classes": classes})
 
-        vectorstore.add_texts(texts=texts)
-
-        result = chain.invoke(
-            "which of the following classes matches this pdf the best? mathematics, physics, computer-science"
+        return jsonify(
+            {
+                "title": result.title,
+                "class": result.classification,
+                "summary": result.summary,
+            }
         )
-        result = "an awesome summary of the pdf"
-        return jsonify({"class": "mathematics", "result": result})
