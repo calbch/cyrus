@@ -2,7 +2,7 @@
 name = "cyrus"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["caldotdev <cluckenbach@protonmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -15,13 +15,11 @@ unstructured = {version = "0.10.19", extras = ["pdf"]}
 pillow = "^10.1.0"
 pydantic = "^2.4.2"
 lxml = "^4.9.3"
-matplotlib = "^3.8.1"
 tiktoken = "^0.5.1"
 open-clip-torch = "^2.23.0"
 torch = "^2.1.0"
 langchain-experimental = "^0.0.40"
 flask = "^3.0.0"
-ipywidgets = "^8.1.1"
 flask-cors = "^4.0.0"
 
 
