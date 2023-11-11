@@ -22,6 +22,7 @@ torch = "^2.1.0"
 langchain-experimental = "^0.0.40"
 flask = "^3.0.0"
 ipywidgets = "^8.1.1"
+flask-cors = "^4.0.0"
 
 
 [tool.poetry.group.dev.dependencies]

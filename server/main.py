@@ -1,4 +1,5 @@
-from flask import Flask, request
+from flask import Flask, Response, jsonify, request
+from flask_cors import CORS, cross_origin
 from unstructured.partition.pdf import partition_pdf
 import tempfile
 import os
@@ -31,15 +32,17 @@ chain = (
     | StrOutputParser()
 )
 app = Flask(__name__)
+CORS(app)
 
 
-@app.route("/")
+@app.route("/handshake")
 def health():
-    return "<p>up & running 🚀</p>"
+    return "up & running 🚀"
 
 
 @app.route("/process", methods=["POST"])
 def process_pdf():
+    print("Processing PDF request 🗃️")
     file = request.files["file"]
     classes = request.form["classes"]
 
@@ -73,6 +76,8 @@ def process_pdf():
 
         vectorstore.add_texts(texts=texts)
 
-        chain.invoke("do something super useful with the pdf")
-
-    return "analyse"
+        result = chain.invoke(
+            "which of the following classes matches this pdf the best? mathematics, physics, computer-science"
+        )
+        result = "an awesome summary of the pdf"
+        return jsonify({"class": "mathematics", "result": result})
